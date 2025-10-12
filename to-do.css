@@ -1,0 +1,215 @@
+body {
+  margin: 0;
+  font-family: 'Orbitron', sans-serif;
+  background: radial-gradient(circle at 50% 50%, #1a0033, #000);
+  color: #0ff;
+  overflow-y: scroll;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: url('https://www.transparenttextures.com/patterns/noise.png');
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+.command-bar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 15px #0ff5;
+  z-index: 100;
+}
+
+
+
+.filters button, #sort {
+  background: none;
+  border: 1px solid #0ff5;
+  color: #0ff;
+  margin: 0 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.filters button:hover {
+  box-shadow: 0 0 10px #0ff;
+}
+
+.filters button.active {
+  background: #0ff;
+  color: #000;
+}
+
+#clock {
+  font-size: 1.2em;
+  text-shadow: 0 0 5px #0ff;
+}
+
+.container {
+  padding: 20px;
+  display: grid;
+  gap: 15px;
+}
+
+/* Improved spacing and alignment for Enter Task menu */
+.task-input {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+#taskInput {
+  width: 80%;
+  padding: 10px;
+  border: 2px solid #0ff;
+  background: transparent;
+  color: #0ff;
+  text-align: center;
+  outline: none;
+  transition: 0.3s;
+}
+
+#taskInput:focus {
+  box-shadow: 0 0 10px #0ff;
+}
+
+#dueDate {
+  background: transparent;
+  border: 2px solid #0ff;
+  color: #0ff;
+  padding: 10px;
+  border-radius: 5px;
+  outline: none;
+  box-shadow: 0 0 5px #0ff5;
+  font-family: 'Orbitron', sans-serif;
+  transition: 0.3s;
+  font-weight: bold; /* Make due date text bold */
+}
+
+#dueDate:focus {
+  box-shadow: 0 0 10px #0ff;
+}
+
+#dueDate::-webkit-calendar-picker-indicator {
+  filter: invert(100%);
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(100%); /* Changes the calendar icon to light white */
+}
+
+#addTask {
+  background: #0ff;
+  color: #000;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+#addTask:hover {
+  background: #00ffaa;
+}
+
+.advanced {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 20px;
+  align-items: center;
+}
+
+.priority-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.priority-group label {
+  color: #0ff;
+  cursor: pointer;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.task {
+  background: rgba(255,255,255,0.05);
+  border: 2px solid transparent;
+  padding: 15px;
+  border-radius: 12px;
+  transition: 0.3s;
+  box-shadow: 0 0 15px transparent;
+  margin-bottom: 10px;
+  position: relative;
+  font-family: Arial, sans-serif;
+}
+
+.task:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(245, 249, 249, 0.2);
+}
+
+.task.priority-high:hover {
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); /* Light red neon glow for high priority tasks */
+}
+
+.task.priority-medium:hover {
+  box-shadow: 0 0 15px rgba(255, 165, 0, 0.7); /* Light orange neon glow for medium priority tasks */
+}
+
+.task.priority-low:hover {
+  box-shadow: 0 0 15px rgba(255, 255, 0, 0.7); /* Light yellow neon glow for low priority tasks */
+}
+
+.completed {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.delete-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: #ff4444;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 0.9em;
+}
+
+.delete-btn:hover {
+  background: #ff0000;
+  box-shadow: 0 0 5px #ff0000;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #0ff;
+  border-radius: 10px;
+}
+
+label[for="dueDate"] {
+  font-weight: bold; /* Make the label 'Due Date' bold */
+}

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Holographic Task Console</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="to-do.css" />
+</head>
+<body>
+
+  <header class="command-bar">
+    <h1>Quantum Task Console</h1>
+    <div class="filters">
+      <button data-filter="all">All</button>
+      <button data-filter="high">High Priority</button>
+      <button data-filter="today">Due Today</button>
+      <button data-filter="completed">Completed</button>
+      <select id="sort">
+        <option value="date-asc">Sort by Date ↑</option>
+        <option value="date-desc">Sort by Date ↓</option>
+        <option value="priority">Sort by Priority</option>
+      </select>
+    </div>
+    <div id="clock"></div>
+  </header>
+
+  <main class="container">
+    <div class="task-input">
+      <input type="text" id="taskInput" placeholder="Enter task..." />
+      <button id="addTask">+</button>
+      <div class="advanced" id="advancedForm">
+        <label for="dueDate">Due Date:</label>
+        <input type="datetime-local" id="dueDate">
+        <div class="priority-group">
+          <label><input type="radio" name="priority" value="high">High</label>
+          <label><input type="radio" name="priority" value="medium">Medium</label>
+          <label><input type="radio" name="priority" value="low" checked>Low</label>
+        </div>
+      </div>
+    </div>
+
+    <section id="tasks" class="grid"></section>
+
+    <section id="completedTasks">
+      <h2>Completed</h2>
+      <div id="completedList"></div>
+    </section>
+  </main>
+
+  <script src="to-do.js"></script>
+</body>
+</html>
