@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Remix - Find Recipes with Your Ingredients</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .tagline {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .search-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #ingredientInput {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+        }
+
+        #ingredientInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-surprise {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-surprise:hover {
+            background: #ee5a5a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .selected-ingredients {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            min-height: 40px;
+        }
+
+        .ingredient-tag {
+            background: #f0f0f0;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ingredient-tag .remove {
+            cursor: pointer;
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .results-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .recipe-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .recipe-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .recipe-content {
+            padding: 20px;
+        }
+
+        .recipe-title {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .recipe-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .recipe-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .match-badge {
+            display: inline-block;
+            background: #4ade80;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .recipe-ingredients {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: white;
+            max-width: 800px;
+            margin: 50px auto;
+            border-radius: 20px;
+            padding: 40px;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 2em;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal-title {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal-section {
+            margin-bottom: 30px;
+        }
+
+        .modal-section h3 {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .instructions-list {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+
+        .instructions-list li {
+            counter-increment: step-counter;
+            margin-bottom: 15px;
+            padding-left: 40px;
+            position: relative;
+        }
+
+        .instructions-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .no-results {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            padding: 40px;
+        }
+
+        .favorite-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            float: right;
+            transition: transform 0.2s;
+        }
+
+        .favorite-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .favorite-btn.active {
+            color: #ff6b6b;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .results-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍳 Recipe Remix</h1>
+            <p class="tagline">Discover amazing recipes with ingredients you already have!</p>
+        </header>
+
+        <div class="search-section">
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="ingredientInput" 
+                    placeholder="Type an ingredient and press Enter (e.g., chicken, tomato, rice...)"
+                >
+                <button class="btn btn-primary" onclick="addIngredient()">Add</button>
+            </div>
+
+            <div class="selected-ingredients" id="selectedIngredients"></div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="searchRecipes()">🔍 Find Recipes</button>
+                <button class="btn btn-surprise" onclick="surpriseMe()">🎲 Surprise Me!</button>
+                <button class="btn btn-primary" onclick="getRandomRecipes()">🎯 Get Random Recipes</button>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #f8f8f8; border-radius: 10px; text-align: center;">
+                <label style="display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="useAPI" onchange="toggleAPIMode()" style="width: 18px; height: 18px; cursor: pointer;">
+                    <span style="font-weight: 500;">🌐 Use Online Recipe API (Get 1000s more recipes!)</span>
+                </label>
+                <div id="apiStatus" style="margin-top: 8px; font-size: 0.9em; color: #666;"></div>
+                    <div style="margin-top:12px; display:flex; gap:8px; justify-content:center; align-items:center;">
+                        <input id="apiKeyInput" placeholder="Enter Spoonacular API key (optional)" style="padding:8px; border-radius:6px; border:1px solid #ccc; width:280px;" />
+                        <button class="btn btn-primary" onclick="saveApiKey()">Save Key</button>
+                        <button class="btn" onclick="clearFavorites()" style="background:#eee; color:#333;">Clear Favorites</button>
+                    </div>
+            </div>
+        </div>
+
+        <div class="results-section" id="results"></div>
+    </div>
+
+    <div class="modal" id="recipeModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // Mock Database
+        let selectedIngredients = [];
+        let favorites = [];
+        let useAPI = false;
+        let currentResults = [];
+
+        const recipes = [
+            {
+                id: 1,
+                title: "Classic Chicken Curry",
+                ingredients: ["chicken", "onion", "tomato", "curry powder", "coconut milk", "garlic", "ginger"],
+                instructions: ["Heat oil in a large pan and sauté chopped onions until golden", "Add minced garlic and ginger, cook for 1 minute", "Add chicken pieces and cook until browned", "Add chopped tomatoes and curry powder, stir well", "Pour in coconut milk and simmer for 20 minutes", "Season with salt and serve hot with rice"],
+                cookingTime: 35,
+                difficulty: "Medium",
+                cuisine: "Indian"
+            },
+            {
+                id: 2,
+                title: "Veggie Fried Rice",
+                ingredients: ["rice", "carrot", "peas", "onion", "soy sauce", "eggs", "garlic"],
+                instructions: ["Cook rice and let it cool completely", "Heat oil in a wok, scramble eggs and set aside", "Sauté garlic and onion until fragrant", "Add diced carrots and peas, stir-fry for 3 minutes", "Add cooled rice and soy sauce, toss everything together", "Mix in scrambled eggs and serve hot"],
+                cookingTime: 20,
+                difficulty: "Easy",
+                cuisine: "Asian"
+            },
+            {
+                id: 3,
+                title: "Tomato Basil Pasta",
+                ingredients: ["pasta", "tomato", "basil", "garlic", "olive oil", "parmesan"],
+                instructions: ["Boil pasta according to package instructions", "Heat olive oil and sauté minced garlic", "Add diced tomatoes and cook until soft", "Toss in cooked pasta and fresh basil", "Top with grated parmesan cheese", "Serve immediately with extra basil"],
+                cookingTime: 15,
+                difficulty: "Easy",
+                cuisine: "Italian"
+            },
+            {
+                id: 4,
+                title: "Beef Tacos",
+                ingredients: ["beef", "tortilla", "lettuce", "tomato", "cheese", "onion", "salsa"],
+                instructions: ["Brown ground beef in a pan with taco seasoning", "Warm tortillas in another pan", "Chop lettuce, tomatoes, and onions", "Assemble tacos with beef as the base", "Top with lettuce, tomatoes, cheese, and salsa", "Serve with lime wedges"],
+                cookingTime: 25,
+                difficulty: "Easy",
+                cuisine: "Mexican"
+            },
+            {
+                id: 5,
+                title: "Mushroom Risotto",
+                ingredients: ["rice", "mushroom", "onion", "garlic", "white wine", "parmesan", "butter"],
+                instructions: ["Sauté sliced mushrooms in butter until golden, set aside", "In the same pan, cook onion and garlic until soft", "Add arborio rice and toast for 2 minutes", "Add white wine and stir until absorbed", "Gradually add warm stock, stirring constantly", "Mix in mushrooms, parmesan, and butter before serving"],
+                cookingTime: 40,
+                difficulty: "Hard",
+                cuisine: "Italian"
+            },
+            {
+                id: 6,
+                title: "Greek Salad",
+                ingredients: ["tomato", "cucumber", "onion", "olives", "feta cheese", "olive oil", "lemon"],
+                instructions: ["Chop tomatoes, cucumbers, and onions into chunks", "Add sliced olives and crumbled feta cheese", "Drizzle with olive oil and fresh lemon juice", "Season with oregano, salt, and pepper", "Toss gently and let sit for 5 minutes", "Serve chilled as a refreshing side dish"],
+                cookingTime: 10,
+                difficulty: "Easy",
+                cuisine: "Greek"
+            },
+            {
+                id: 7,
+                title: "Chicken Stir Fry",
+                ingredients: ["chicken", "broccoli", "carrot", "bell pepper", "soy sauce", "garlic", "ginger"],
+                instructions: ["Cut chicken into bite-sized pieces", "Heat oil in wok and cook chicken until browned", "Add minced garlic and ginger, stir for 30 seconds", "Add chopped vegetables and stir-fry for 5 minutes", "Pour in soy sauce and cook for 2 more minutes", "Serve hot over rice or noodles"],
+                cookingTime: 20,
+                difficulty: "Easy",
+                cuisine: "Asian"
+            },
+            {
+                id: 8,
+                title: "Margherita Pizza",
+                ingredients: ["pizza dough", "tomato", "mozzarella", "basil", "olive oil", "garlic"],
+                instructions: ["Roll out pizza dough to desired thickness", "Spread crushed tomatoes mixed with garlic", "Add sliced fresh mozzarella evenly", "Drizzle with olive oil", "Bake at 450°F for 12-15 minutes", "Top with fresh basil leaves and serve"],
+                cookingTime: 25,
+                difficulty: "Medium",
+                cuisine: "Italian"
+            },
+            {
+                id: 9,
+                title: "Egg Fried Rice",
+                ingredients: ["rice", "eggs", "peas", "carrot", "soy sauce", "green onion"],
+                instructions: ["Use day-old cooked rice for best results", "Scramble eggs in a hot wok and set aside", "Stir-fry peas and diced carrots", "Add rice and break up any clumps", "Mix in scrambled eggs and soy sauce", "Garnish with chopped green onions"],
+                cookingTime: 15,
+                difficulty: "Easy",
+                cuisine: "Asian"
+            },
+            {
+                id: 10,
+                title: "Caprese Salad",
+                ingredients: ["tomato", "mozzarella", "basil", "olive oil", "balsamic vinegar"],
+                instructions: ["Slice tomatoes and mozzarella into rounds", "Arrange alternating slices on a plate", "Tuck fresh basil leaves between slices", "Drizzle with quality olive oil", "Add a splash of balsamic vinegar", "Season with salt and pepper"],
+                cookingTime: 5,
+                difficulty: "Easy",
+                cuisine: "Italian"
+            },
+            {
+                id: 11,
+                title: "Salmon Teriyaki",
+                ingredients: ["salmon", "soy sauce", "honey", "ginger", "garlic", "sesame seeds", "rice"],
+                instructions: ["Mix soy sauce, honey, minced ginger and garlic for marinade", "Marinate salmon for 15 minutes", "Pan-sear salmon skin side down for 4 minutes", "Flip and cook for another 3 minutes", "Brush with remaining marinade", "Serve with rice and sprinkle sesame seeds"],
+                cookingTime: 30,
+                difficulty: "Medium",
+                cuisine: "Japanese"
+            },
+            {
+                id: 12,
+                title: "Butter Chicken",
+                ingredients: ["chicken", "butter", "cream", "tomato", "onion", "garlic", "garam masala", "ginger"],
+                instructions: ["Marinate chicken in yogurt and spices for 1 hour", "Grill or pan-fry chicken pieces until cooked", "Sauté onions, garlic, and ginger in butter", "Add tomato puree and spices, cook for 10 minutes", "Add cream and cooked chicken", "Simmer for 15 minutes and serve with naan"],
+                cookingTime: 50,
+                difficulty: "Medium",
+                cuisine: "Indian"
+            },
+            {
+                id: 13,
+                title: "Caesar Salad",
+                ingredients: ["lettuce", "parmesan", "croutons", "olive oil", "lemon", "garlic", "anchovy"],
+                instructions: ["Chop romaine lettuce into bite-sized pieces", "Make dressing with olive oil, lemon juice, garlic, and anchovy", "Toss lettuce with dressing", "Add grated parmesan cheese", "Top with homemade or store-bought croutons", "Serve immediately"],
+                cookingTime: 10,
+                difficulty: "Easy",
+                cuisine: "American"
+            },
+            {
+                id: 14,
+                title: "Pad Thai",
+                ingredients: ["rice noodles", "shrimp", "eggs", "peanuts", "bean sprouts", "lime", "fish sauce", "tamarind"],
+                instructions: ["Soak rice noodles in warm water for 20 minutes", "Stir-fry shrimp until pink, set aside", "Scramble eggs in the wok", "Add drained noodles and sauce (fish sauce, tamarind, sugar)", "Toss with shrimp, bean sprouts, and peanuts", "Serve with lime wedges"],
+                cookingTime: 25,
+                difficulty: "Medium",
+                cuisine: "Thai"
+            },
+            {
+                id: 15,
+                title: "Spaghetti Carbonara",
+                ingredients: ["spaghetti", "bacon", "eggs", "parmesan", "black pepper", "garlic"],
+                instructions: ["Cook spaghetti according to package directions", "Fry bacon until crispy, add minced garlic", "Beat eggs with grated parmesan", "Drain pasta and immediately toss with bacon", "Remove from heat and mix in egg mixture", "Add lots of black pepper and serve"],
+                cookingTime: 20,
+                difficulty: "Medium",
+                cuisine: "Italian"
+            },
+            {
+                id: 16,
+                title: "Vegetable Biryani",
+                ingredients: ["rice", "potato", "carrot", "peas", "onion", "yogurt", "biryani masala", "mint"],
+                instructions: ["Soak basmati rice for 30 minutes", "Fry onions until golden brown", "Add vegetables and yogurt with spices", "Layer partially cooked rice over vegetables", "Cover and cook on low heat for 20 minutes", "Garnish with fried onions and mint"],
+                cookingTime: 60,
+                difficulty: "Hard",
+                cuisine: "Indian"
+            },
+            {
+                id: 17,
+                title: "Fish and Chips",
+                ingredients: ["fish", "potato", "flour", "beer", "lemon", "salt", "oil"],
+                instructions: ["Cut potatoes into thick fries", "Make batter with flour, beer, and salt", "Deep fry potatoes until golden", "Coat fish fillets in batter", "Deep fry fish until crispy", "Serve with lemon wedges and tartar sauce"],
+                cookingTime: 35,
+                difficulty: "Medium",
+                cuisine: "British"
+            },
+            {
+                id: 18,
+                title: "Chicken Quesadilla",
+                ingredients: ["tortilla", "chicken", "cheese", "bell pepper", "onion", "salsa", "sour cream"],
+                instructions: ["Cook diced chicken with peppers and onions", "Place cheese and chicken on half a tortilla", "Fold tortilla and cook in a pan until golden", "Flip and cook other side until cheese melts", "Cut into wedges", "Serve with salsa and sour cream"],
+                cookingTime: 15,
+                difficulty: "Easy",
+                cuisine: "Mexican"
+            },
+            {
+                id: 19,
+                title: "Beef Stew",
+                ingredients: ["beef", "potato", "carrot", "onion", "celery", "tomato paste", "beef broth", "thyme"],
+                instructions: ["Brown beef cubes in a large pot", "Remove beef and sauté onions, carrots, and celery", "Add tomato paste and cook for 2 minutes", "Return beef to pot with broth and thyme", "Simmer for 1.5 hours", "Add potatoes and cook until tender"],
+                cookingTime: 120,
+                difficulty: "Medium",
+                cuisine: "American"
+            },
+            {
+                id: 20,
+                title: "Pesto Pasta",
+                ingredients: ["pasta", "basil", "pine nuts", "parmesan", "garlic", "olive oil"],
+                instructions: ["Cook pasta until al dente", "Blend basil, pine nuts, garlic, and parmesan", "Slowly add olive oil while blending", "Drain pasta and reserve some pasta water", "Toss pasta with pesto, adding pasta water if needed", "Serve with extra parmesan"],
+                cookingTime: 15,
+                difficulty: "Easy",
+                cuisine: "Italian"
+            },
+            {
+                id: 21,
+                title: "Chicken Alfredo",
+                ingredients: ["chicken", "fettuccine", "cream", "butter", "parmesan", "garlic"],
+                instructions: ["Cook fettuccine according to package", "Season and cook chicken breast until done", "Melt butter and sauté garlic", "Add cream and bring to simmer", "Stir in parmesan until smooth", "Toss pasta and sliced chicken with sauce"],
+                cookingTime: 25,
+                difficulty: "Medium",
+                cuisine: "Italian"
+            },
+            {
+                id: 22,
+                title: "Falafel Wrap",
+                ingredients: ["chickpeas", "onion", "garlic", "parsley", "cumin", "pita bread", "tahini", "lettuce"],
+                instructions: ["Blend chickpeas with onion, garlic, parsley, and spices", "Form into small balls", "Deep fry until golden brown", "Warm pita bread", "Fill with falafel, lettuce, tomatoes", "Drizzle with tahini sauce"],
+                cookingTime: 30,
+                difficulty: "Medium",
+                cuisine: "Middle Eastern"
+            },
+            {
+                id: 23,
+                title: "Shrimp Scampi",
+                ingredients: ["shrimp", "pasta", "garlic", "butter", "white wine", "lemon", "parsley"],
+                instructions: ["Cook linguine until al dente", "Sauté garlic in butter", "Add shrimp and cook until pink", "Pour in white wine and lemon juice", "Toss with cooked pasta", "Garnish with fresh parsley"],
+                cookingTime: 20,
+                difficulty: "Easy",
+                cuisine: "Italian"
+            },
+            {
+                id: 24,
+                title: "Chicken Fajitas",
+                ingredients: ["chicken", "bell pepper", "onion", "tortilla", "lime", "cumin", "chili powder"],
+                instructions: ["Slice chicken into strips and marinate with spices", "Slice peppers and onions", "Cook chicken in hot skillet", "Add vegetables and cook until tender", "Warm tortillas", "Serve with lime wedges and toppings"],
+                cookingTime: 20,
+                difficulty: "Easy",
+                cuisine: "Mexican"
+            },
+            {
+                id: 25,
+                title: "Minestrone Soup",
+                ingredients: ["beans", "pasta", "tomato", "carrot", "celery", "onion", "garlic", "spinach"],
+                instructions: ["Sauté onion, carrot, and celery", "Add garlic and cook for 1 minute", "Pour in vegetable broth and diced tomatoes", "Add beans and small pasta", "Simmer for 20 minutes", "Stir in fresh spinach before serving"],
+                cookingTime: 35,
+                difficulty: "Easy",
+                cuisine: "Italian"
+            },
+            {
+                id: 26,
+                title: "Beef Burger",
+                ingredients: ["beef", "bun", "lettuce", "tomato", "cheese", "onion", "ketchup", "mustard"],
+                instructions: ["Form ground beef into patties", "Season with salt and pepper", "Grill or pan-fry patties until cooked", "Toast buns", "Assemble with lettuce, tomato, cheese, and condiments", "Serve hot"],
+                cookingTime: 20,
+                difficulty: "Easy",
+                cuisine: "American"
+            },
+            {
+                id: 27,
+                title: "Chicken Caesar Wrap",
+                ingredients: ["chicken", "tortilla", "lettuce", "parmesan", "caesar dressing", "croutons"],
+                instructions: ["Cook and slice chicken breast", "Chop lettuce and mix with dressing", "Add chicken, parmesan, and croutons", "Wrap in tortilla", "Cut in half and serve"],
+                cookingTime: 15,
+                difficulty: "Easy",
+                cuisine: "American"
+            },
+            {
+                id: 28,
+                title: "Vegetable Curry",
+                ingredients: ["potato", "carrot", "peas", "onion", "tomato", "curry powder", "coconut milk", "garlic"],
+                instructions: ["Sauté onions and garlic", "Add vegetables and cook for 5 minutes", "Add curry powder and tomatoes", "Pour in coconut milk", "Simmer until vegetables are tender", "Serve with rice"],
+                cookingTime: 30,
+                difficulty: "Medium",
+                cuisine: "Indian"
+            },
+            {
+                id: 29,
+                title: "Shakshuka",
+                ingredients: ["eggs", "tomato", "onion", "bell pepper", "cumin", "paprika", "olive oil"],
+                instructions: ["Sauté onions and peppers in olive oil", "Add tomatoes and spices", "Simmer for 10 minutes", "Crack eggs into the sauce", "Cover and cook until eggs are set", "Serve with bread"],
+                cookingTime: 25,
+                difficulty: "Easy",
+                cuisine: "Middle Eastern"
+            },
+            {
+                id: 30,
+                title: "Pancakes",
+                ingredients: ["flour", "milk", "eggs", "sugar", "baking powder", "butter", "maple syrup"],
+                instructions: ["Mix dry ingredients", "Whisk in milk and eggs", "Heat butter in a pan", "Pour batter and cook until bubbles form", "Flip and cook other side", "Serve with syrup"],
+                cookingTime: 15,
+                difficulty: "Easy",
+                cuisine: "American"
+            },
+            {
+                id: 31,
+                title: "Tuna Salad",
+                ingredients: ["tuna", "mayonnaise", "celery", "onion", "lettuce", "lemon"],
+                instructions: ["Drain tuna and mix with mayo", "Add chopped celery and onion", "Season with lemon juice", "Serve on lettuce leaves", "Add crackers if desired"],
+                cookingTime: 10,
+                difficulty: "Easy",
+                cuisine: "American"
+            },
+            {
+                id: 32,
+                title: "Stuffed Peppers",
+                ingredients: ["bell pepper", "rice", "beef", "onion", "tomato", "cheese", "garlic"],
+                instructions: ["Cook rice and ground beef with onions", "Mix with tomatoes and garlic", "Stuff into halved peppers", "Top with cheese", "Bake at 375°F for 30 minutes"],
+                cookingTime: 45,
+                difficulty: "Medium",
+                cuisine: "American"
+            },
+            {
+                id: 33,
+                title: "French Toast",
+                ingredients: ["bread", "eggs", "milk", "cinnamon", "butter", "maple syrup"],
+                instructions: ["Whisk eggs, milk, and cinnamon", "Dip bread slices in mixture", "Cook in buttered pan until golden", "Flip and cook other side", "Serve with syrup"],
+                cookingTime: 10,
+                difficulty: "Easy",
+                cuisine: "French"
+            },
+            {
+                id: 34,
+                title: "Lentil Soup",
+                ingredients: ["lentils", "carrot", "celery", "onion", "tomato", "garlic", "thyme"],
+                instructions: ["Sauté vegetables and garlic", "Add lentils and tomatoes", "Pour in broth and thyme", "Simmer for 30 minutes", "Blend if desired", "Serve hot"],
+                cookingTime: 40,
+                difficulty: "Easy",
+                cuisine: "Mediterranean"
+            },
+            {
+                id: 35,
+                title: "Chicken Pot Pie",
+                ingredients: ["chicken", "potato", "carrot", "peas", "onion", "flour", "milk", "pie crust"],
+                instructions: ["Cook chicken and vegetables", "Make sauce with flour and milk", "Combine in pie dish", "Top with crust", "Bake at 400°F for 30 minutes"],
+                cookingTime: 60,
+                difficulty: "Medium",
+                cuisine: "American"
+            },
+            {
+                id: 36,
+                title: "Greek Yogurt Parfait",
+                ingredients: ["yogurt", "berries", "honey", "granola", "nuts"],
+                instructions: ["Layer yogurt in a glass", "Add berries and granola", "Drizzle with honey", "Top with nuts", "Chill and serve"],
+                cookingTime: 5,
+                difficulty: "Easy",
+                cuisine: "Greek"
+            },
+            {
+                id: 37,
+                title: "Beef Stir Fry",
+                ingredients: ["beef", "broccoli", "carrot", "soy sauce", "garlic", "ginger", "rice"],
+                instructions: ["Slice beef thinly", "Stir-fry beef until browned", "Add vegetables and garlic", "Pour in soy sauce", "Cook until tender", "Serve over rice"],
+                cookingTime: 20,
+                difficulty: "Easy",
+                cuisine: "Asian"
+            },
+            {
+                id: 38,
+                title: "Quinoa Salad",
+                ingredients: ["quinoa", "cucumber", "tomato", "feta", "olive oil", "lemon", "mint"],
+                instructions: ["Cook quinoa and cool", "Chop vegetables", "Mix with feta and herbs", "Dress with oil and lemon", "Toss and serve chilled"],
+                cookingTime: 20,
+                difficulty: "Easy",
+                cuisine: "Mediterranean"
+            },
+            {
+                id: 39,
+                title: "Mac and Cheese",
+                ingredients: ["pasta", "cheese", "milk", "butter", "flour"],
+                instructions: ["Cook pasta", "Make cheese sauce with butter, flour, milk", "Add cheese", "Mix with pasta", "Bake if desired"],
+                cookingTime: 25,
+                difficulty: "Easy",
+                cuisine: "American"
+            },
+            {
+                id: 40,
+                title: "Fruit Smoothie",
+                ingredients: ["banana", "berries", "yogurt", "milk", "honey"],
+                instructions: ["Blend all ingredients", "Add ice if desired", "Blend until smooth", "Pour into glass", "Serve immediately"],
+                cookingTime: 5,
+                difficulty: "Easy",
+                cuisine: "American"
+            },
+            {
+                id: 41,
+                title: "Roast Chicken",
+                ingredients: ["chicken", "potato", "carrot", "onion", "rosemary", "olive oil"],
+                instructions: ["Season chicken with herbs", "Arrange vegetables around", "Drizzle with oil", "Roast at 400°F for 1 hour", "Rest and serve"],
+                cookingTime: 70,
+                difficulty: "Medium",
+                cuisine: "American"
+            },
+            {
+                id: 42,
+                title: "Chocolate Chip Cookies",
+                ingredients: ["flour", "butter", "sugar", "eggs", "chocolate chips", "vanilla"],
+                instructions: ["Cream butter and sugars", "Add eggs and vanilla", "Mix in flour", "Fold in chocolate chips", "Bake at 350°F for 10 minutes"],
+                cookingTime: 25,
+                difficulty: "Easy",
+                cuisine: "American"
+            },
+            {
+                id: 43,
+                title: "Spinach and Feta Pie",
+                ingredients: ["spinach", "feta", "onion", "eggs", "phyllo dough", "olive oil"],
+                instructions: ["Sauté spinach and onions", "Mix with feta and eggs", "Layer phyllo in dish", "Add filling", "Bake at 375°F for 30 minutes"],
+                cookingTime: 45,
+                difficulty: "Medium",
+                cuisine: "Greek"
+            },
+            {
+                id: 44,
+                title: "Beef Tacos",
+                ingredients: ["beef", "tortilla", "lettuce", "cheese", "salsa", "onion"],
+                instructions: ["Cook ground beef", "Warm tortillas", "Fill with beef and toppings", "Add cheese and salsa", "Serve immediately"],
+                cookingTime: 20,
+                difficulty: "Easy",
+                cuisine: "Mexican"
+            },
+            {
+                id: 45,
+                title: "Tomato Soup",
+                ingredients: ["tomato", "onion", "garlic", "cream", "basil", "bread"],
+                instructions: ["Sauté onions and garlic", "Add tomatoes and simmer", "Blend until smooth", "Add cream", "Serve with bread"],
+                cookingTime: 30,
+                difficulty: "Easy",
+                cuisine: "American"
+            },
+            {
+                id: 46,
+                title: "Grilled Cheese Sandwich",
+                ingredients: ["bread", "cheese", "butter"],
+                instructions: ["Butter bread slices", "Add cheese between", "Grill until golden", "Flip and cook other side", "Serve hot"],
+                cookingTime: 10,
+                difficulty: "Easy",
+                cuisine: "American"
+            },
+            {
+                id: 47,
+                title: "Chicken Noodle Soup",
+                ingredients: ["chicken", "noodles", "carrot", "celery", "onion", "broth"],
+                instructions: ["Cook chicken in broth", "Add chopped vegetables", "Simmer for 20 minutes", "Add noodles", "Cook until tender"],
+                cookingTime: 35,
+                difficulty: "Easy",
+                cuisine: "American"
+            },
+            {
+                id: 48,
+                title: "Banana Bread",
+                ingredients: ["banana", "flour", "sugar", "eggs", "butter", "baking soda"],
+                instructions: ["Mash bananas", "Mix with wet ingredients", "Add dry ingredients", "Pour into loaf pan", "Bake at 350°F for 50 minutes"],
+                cookingTime: 60,
+                difficulty: "Easy",
+                cuisine: "American"
+            },
+            {
+                id: 49,
+                title: "Eggplant Parmesan",
+                ingredients: ["eggplant", "tomato sauce", "mozzarella", "parmesan", "basil"],
+                instructions: ["Slice and fry eggplant", "Layer with sauce and cheese", "Bake at 375°F for 25 minutes", "Top with basil", "Serve hot"],
+                cookingTime: 40,
+                difficulty: "Medium",
+                cuisine: "Italian"
+            },
+            {
+                id: 50,
+                title: "Berry Cobbler",
+                ingredients: ["berries", "flour", "sugar", "butter", "milk"],
+                instructions: ["Mix berries with sugar", "Make topping with flour and butter", "Pour over berries", "Bake at 375°F for 30 minutes", "Serve warm"],
+                cookingTime: 40,
+                difficulty: "Easy",
+                cuisine: "American"
+            },
+            {
+                id: 51,
+                title: "Sushi Rolls",
+                ingredients: ["rice", "nori", "fish", "cucumber", "avocado", "soy sauce", "wasabi"],
+                instructions: ["Cook sushi rice and season with vinegar", "Lay nori on bamboo mat", "Spread rice on nori leaving edge", "Add fish, cucumber, and avocado", "Roll tightly using mat", "Slice into pieces and serve with soy sauce"],
+                cookingTime: 45,
+                difficulty: "Medium",
+                cuisine: "Japanese"
+            },
+            {
+                id: 52,
+                title: "Paella",
+                ingredients: ["rice", "seafood", "chicken", "peas", "bell pepper", "saffron", "garlic"],
+                instructions: ["Heat oil in paella pan", "Cook chicken and seafood", "Add garlic and vegetables", "Stir in rice and saffron", "Add broth and simmer", "Let rest before serving"],
+                cookingTime: 50,
+                difficulty: "Medium",
+                cuisine: "Spanish"
+            },
+            {
+                id: 53,
+                title: "Borscht",
+                ingredients: ["beet", "potato", "carrot", "onion", "cabbage", "beef", "sour cream"],
+                instructions: ["Cook beef broth", "Add chopped vegetables", "Simmer until tender", "Add beets last", "Season with vinegar", "Serve with sour cream"],
+                cookingTime: 90,
+                difficulty: "Medium",
+                cuisine: "Ukrainian"
+            },
+            {
+                id: 54,
+                title: "Kimchi Fried Rice",
+                ingredients: ["rice", "kimchi", "eggs", "onion", "green onion", "sesame oil", "gochujang"],
+                instructions: ["Cook rice and set aside", "Sauté kimchi and onion", "Add rice and mix", "Push aside and scramble eggs", "Mix everything with sesame oil", "Garnish with green onions"],
+                cookingTime: 20,
+                difficulty: "Easy",
+                cuisine: "Korean"
+            },
+            {
+                id: 55,
+                title: "Ratatouille",
+                ingredients: ["eggplant", "zucchini", "bell pepper", "tomato", "onion", "garlic", "herbs"],
+                instructions: ["Sauté onions and garlic", "Add eggplant and cook", "Add zucchini and peppers", "Stir in tomatoes", "Simmer with herbs", "Serve hot or cold"],
+                cookingTime: 40,
+                difficulty: "Easy",
+                cuisine: "French"
+            },
+            {
+                id: 56,
+                title: "Lamb Curry",
+                ingredients: ["lamb", "onion", "tomato", "curry powder", "coconut milk", "garlic", "ginger"],
+                instructions: ["Brown lamb pieces", "Sauté onions, garlic, ginger", "Add curry powder and tomatoes", "Add lamb back in", "Pour coconut milk", "Simmer until tender"],
+                cookingTime: 80,
+                difficulty: "Medium",
+                cuisine: "Indian"
+            },
+            {
+                id: 57,
+                title: "Ceviche",
+                ingredients: ["fish", "lime", "onion", "cilantro", "chili", "avocado", "tomato"],
+                instructions: ["Cut fish into cubes", "Marinate in lime juice", "Add chopped vegetables", "Mix with cilantro", "Season with chili", "Chill and serve"],
+                cookingTime: 30,
+                difficulty: "Easy",
+                cuisine: "Peruvian"
+            },
+            {
+                id: 58,
+                title: "Bibimbap",
+                ingredients: ["rice", "beef", "spinach", "carrot", "mushroom", "egg", "gochujang"],
+                instructions: ["Cook rice", "Stir-fry vegetables separately", "Cook beef with soy sauce", "Fry egg", "Arrange over rice", "Top with gochujang"],
+                cookingTime: 35,
+                difficulty: "Medium",
+                cuisine: "Korean"
+            },
+            {
+                id: 59,
+                title: "Miso Soup",
+                ingredients: ["tofu", "seaweed", "miso paste", "green onion", "dashi"],
+                instructions: ["Heat dashi broth", "Add miso paste", "Add cubed tofu", "Add seaweed", "Simmer briefly", "Garnish with green onions"],
+                cookingTime: 10,
+                difficulty: "Easy",
+                cuisine: "Japanese"
+            },
+            {
+                id: 60,
+                title: "Tiramisu",
+                ingredients: ["mascarpone", "coffee", "ladyfingers", "eggs", "sugar", "cocoa"],
+                instructions: ["Beat egg yolks with sugar", "Mix in mascarpone", "Dip ladyfingers in coffee", "Layer in dish", "Refrigerate overnight", "Dust with cocoa"],
+                cookingTime: 20,
+                difficulty: "Medium",
+                cuisine: "Italian"
+            },
+            {
+                id: 61,
+                title: "Pho",
+                ingredients: ["beef", "rice noodles", "onion", "ginger", "star anise", "bean sprouts", "basil"],
+                instructions: ["Roast bones for broth", "Add spices and simmer", "Cook noodles", "Slice beef thinly", "Assemble bowls", "Add fresh herbs"],
+                cookingTime: 180,
+                difficulty: "Hard",
+                cuisine: "Vietnamese"
+            },
+            {
+                id: 62,
+                title: "Baklava",
+                ingredients: ["phyllo dough", "nuts", "butter", "honey", "cinnamon", "sugar"],
+                instructions: ["Layer phyllo with butter", "Add nut mixture", "Cut into pieces", "Bake until golden", "Pour honey syrup", "Let soak"],
+                cookingTime: 60,
+                difficulty: "Medium",
+                cuisine: "Turkish"
+            },
+            {
+                id: 63,
+                title: "Jerk Chicken",
+                ingredients: ["chicken", "allspice", "scotch bonnet", "soy sauce", "brown sugar", "thyme", "garlic"],
+                instructions: ["Blend marinade ingredients", "Marinate chicken", "Grill or bake", "Baste with marinade", "Cook until done", "Serve with sides"],
+                cookingTime: 45,
+                difficulty: "Medium",
+                cuisine: "Jamaican"
+            },
+            {
+                id: 64,
+                title: "Pierogi",
+                ingredients: ["flour", "potato", "onion", "butter", "cheese", "sour cream"],
+                instructions: ["Make dough", "Prepare potato filling", "Roll and cut dough", "Fill and seal", "Boil pierogi", "Fry if desired"],
+                cookingTime: 60,
+                difficulty: "Medium",
+                cuisine: "Polish"
+            },
+            {
+                id: 65,
+                title: "Gazpacho",
+                ingredients: ["tomato", "cucumber", "bell pepper", "onion", "garlic", "olive oil", "bread"],
+                instructions: ["Blend all ingredients", "Chill for hours", "Adjust seasoning", "Serve cold", "Garnish with croutons"],
+                cookingTime: 15,
+                difficulty: "Easy",
+                cuisine: "Spanish"
+            },
+            {
+                id: 66,
+                title: "Bao Buns",
+                ingredients: ["flour", "yeast", "pork", "hoisin", "cucumber", "green onion"],
+                instructions: ["Make dough and let rise", "Prepare pork filling", "Roll and steam buns", "Cook filling", "Assemble buns", "Serve warm"],
+                cookingTime: 90,
+                difficulty: "Hard",
+                cuisine: "Chinese"
+            },
+            {
+                id: 67,
+                title: "Shakshuka",
+                ingredients: ["eggs", "tomato", "onion", "bell pepper", "cumin", "paprika", "feta"],
+                instructions: ["Sauté vegetables", "Add spices and tomatoes", "Simmer sauce", "Crack eggs into sauce", "Cover and cook", "Top with feta"],
+                cookingTime: 25,
+                difficulty: "Easy",
+                cuisine: "Israeli"
+            },
+            {
+                id: 68,
+                title: "Risotto",
+                ingredients: ["arborio rice", "mushroom", "onion", "white wine", "parmesan", "butter", "broth"],
+                instructions: ["Sauté onions", "Add rice and toast", "Add wine and stir", "Gradually add broth", "Stir in mushrooms", "Finish with cheese"],
+                cookingTime: 40,
+                difficulty: "Medium",
+                cuisine: "Italian"
+            },
+            {
+                id: 69,
+                title: "Empanadas",
+                ingredients: ["flour", "beef", "onion", "egg", "raisins", "olive oil", "cumin"],
+                instructions: ["Make dough", "Cook beef filling", "Roll dough", "Fill and fold", "Seal edges", "Bake until golden"],
+                cookingTime: 50,
+                difficulty: "Medium",
+                cuisine: "Argentinian"
+            },
+            {
+                id: 70,
+                title: "Poke Bowl",
+                ingredients: ["fish", "rice", "avocado", "cucumber", "seaweed", "soy sauce", "sesame"],
+                instructions: ["Cook rice", "Cube raw fish", "Marinate fish", "Chop vegetables", "Assemble bowl", "Drizzle with sauce"],
+                cookingTime: 20,
+                difficulty: "Easy",
+                cuisine: "Hawaiian"
+            }
+        ];
+
+        // Input handling
+        document.getElementById('ingredientInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addIngredient();
+            }
+        });
+
+        // Local storage helpers
+        function saveState() {
+            localStorage.setItem('rr_selectedIngredients', JSON.stringify(selectedIngredients));
+            localStorage.setItem('rr_favorites', JSON.stringify(favorites));
+            localStorage.setItem('rr_useAPI', JSON.stringify(useAPI));
+            localStorage.setItem('rr_apiKey', document.getElementById('apiKeyInput').value || '');
+        }
+
+        function loadState() {
+            try {
+                const si = JSON.parse(localStorage.getItem('rr_selectedIngredients') || '[]');
+                const fav = JSON.parse(localStorage.getItem('rr_favorites') || '[]');
+                const ua = JSON.parse(localStorage.getItem('rr_useAPI') || 'false');
+                const key = localStorage.getItem('rr_apiKey') || '';
+
+                if (Array.isArray(si)) selectedIngredients = si;
+                if (Array.isArray(fav)) favorites = fav;
+                useAPI = !!ua;
+                if (key) document.getElementById('apiKeyInput').value = key;
+            } catch (e) {
+                console.warn('Failed to load saved state', e);
+            }
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            localStorage.setItem('rr_apiKey', key);
+            alert('API key saved locally.');
+            saveState();
+        }
+
+        function clearFavorites() {
+            if (!confirm('Clear all favorites?')) return;
+            favorites = [];
+            saveState();
+            if (currentResults && currentResults.length) displayResults(currentResults);
+        }
+
+        function addIngredient() {
+            const input = document.getElementById('ingredientInput');
+            const ingredient = input.value.trim().toLowerCase();
+
+            if (ingredient && !selectedIngredients.includes(ingredient)) {
+                selectedIngredients.push(ingredient);
+                updateIngredientDisplay();
+                input.value = '';
+            }
+        }
+
+        function removeIngredient(ingredient) {
+            selectedIngredients = selectedIngredients.filter(i => i !== ingredient);
+            updateIngredientDisplay();
+        }
+
+        function updateIngredientDisplay() {
+            const container = document.getElementById('selectedIngredients');
+
+            if (selectedIngredients.length === 0) {
+                container.innerHTML = '<p style="color: #999;">No ingredients selected yet. Start typing to add some!</p>';
+                return;
+            }
+
+            container.innerHTML = selectedIngredients.map(ingredient => `
+                <div class="ingredient-tag">
+                    <span>${ingredient}</span>
+                    <span class="remove" onclick="removeIngredient('${ingredient}')">✕</span>
+                </div>
+            `).join('');
+        }
+
+        function toggleAPIMode() {
+            useAPI = document.getElementById('useAPI').checked;
+            const statusDiv = document.getElementById('apiStatus');
+            if (useAPI) {
+                statusDiv.textContent = 'API mode enabled - searching online recipes!';
+                statusDiv.style.color = '#4ade80';
+            } else {
+                statusDiv.textContent = 'Using local recipes database.';
+                statusDiv.style.color = '#666';
+            }
+            saveState();
+        }
+
+        async function searchRecipes() {
+            if (selectedIngredients.length === 0) {
+                alert('Please add at least one ingredient!');
+                return;
+            }
+
+            if (useAPI) {
+                // Use Spoonacular API (requires API key)
+                // read api key from saved input (if any)
+                const apiKey = document.getElementById('apiKeyInput').value.trim() || '63e4f973a9914869a4f378a8320ba24a'; // Replace with your actual API key
+                const ingredientsQuery = selectedIngredients.join(',');
+                const url = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(ingredientsQuery)}&number=10&apiKey=${apiKey}`;
+
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    const results = data.map(recipe => ({
+                        id: recipe.id,
+                        title: recipe.title,
+                        ingredients: recipe.usedIngredients.map(ing => ing.name).concat(recipe.missedIngredients.map(ing => ing.name)),
+                        instructions: [], // API doesn't provide instructions in this endpoint
+                        cookingTime: recipe.readyInMinutes || 30,
+                        difficulty: 'Unknown',
+                        cuisine: 'Unknown',
+                        image: recipe.image,
+                        matchPercentage: Math.round((recipe.usedIngredientCount / (recipe.usedIngredientCount + recipe.missedIngredientCount)) * 100)
+                    }));
+
+                    displayResults(results);
+                    saveState();
+                } catch (error) {
+                    console.error('API Error:', error);
+                    alert('Failed to fetch recipes from API. Falling back to local database.');
+                    // Fallback to local search
+                    searchLocalRecipes();
+                }
+            } else {
+                searchLocalRecipes();
+                saveState();
+            }
+        }
+
+        function searchLocalRecipes() {
+            const results = recipes.map(recipe => {
+                const matchCount = recipe.ingredients.filter(ing =>
+                    selectedIngredients.some(selected =>
+                        ing.toLowerCase().includes(selected.toLowerCase())
+                    )
+                ).length;
+
+                const matchPercentage = Math.round((matchCount / recipe.ingredients.length) * 100);
+
+                return {
+                    ...recipe,
+                    matchCount,
+                    matchPercentage
+                };
+            })
+            .filter(recipe => recipe.matchCount > 0)
+            .sort((a, b) => b.matchPercentage - a.matchPercentage);
+
+            displayResults(results);
+        }
+
+        function surpriseMe() {
+            const randomRecipe = recipes[Math.floor(Math.random() * recipes.length)];
+            displayResults([{...randomRecipe, matchPercentage: 100, matchCount: randomRecipe.ingredients.length}]);
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function getRandomRecipes() {
+            const shuffled = shuffleArray(recipes);
+            const randomRecipes = shuffled.map(recipe => ({
+                ...recipe,
+                matchPercentage: 100,
+                matchCount: recipe.ingredients.length
+            }));
+            displayResults(randomRecipes);
+        }
+
+        function displayResults(results) {
+            currentResults = results;
+            const container = document.getElementById('results');
+
+            if (results.length === 0) {
+                container.innerHTML = '<div class="no-results">No recipes found with those ingredients. Try different combinations!</div>';
+                return;
+            }
+
+            container.innerHTML = results.map(recipe => `
+                <div class="recipe-card" onclick="showRecipeDetails(${recipe.id})">
+                    <div class="recipe-image" style="${recipe.image ? `background-image: url('${recipe.image}'); background-size: cover; background-position: center;` : ''}"></div>
+                    <div class="recipe-content">
+                        <button title="Toggle favorite" aria-label="Toggle favorite" class="favorite-btn ${favorites.includes(recipe.id) ? 'active' : ''}"
+                                onclick="toggleFavorite(event, ${recipe.id})">
+                            ${favorites.includes(recipe.id) ? '❤️' : '🤍'}
+                        </button>
+                        <h3 class="recipe-title">${recipe.title}</h3>
+                        <div class="recipe-meta">
+                            <span>⏱️ ${recipe.cookingTime} min</span>
+                            <span>📊 ${recipe.difficulty}</span>
+                            <span>🌍 ${recipe.cuisine}</span>
+                        </div>
+                        <span class="match-badge">${recipe.matchPercentage}% Match</span>
+                        <div class="recipe-ingredients">
+                            <strong>Ingredients:</strong> ${Array.isArray(recipe.ingredients) ? recipe.ingredients.slice(0, 4).join(', ') : ''}${Array.isArray(recipe.ingredients) && recipe.ingredients.length > 4 ? '...' : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showRecipeDetails(recipeId) {
+            // Prefer currentResults (which may come from API) then fallback to local recipes
+            const recipe = currentResults.find(r => r.id === recipeId) || recipes.find(r => r.id === recipeId);
+            
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <h2 class="modal-title">${recipe.title}</h2>
+                
+                <div class="recipe-meta" style="justify-content: center; margin-bottom: 30px;">
+                    <span>⏱️ ${recipe.cookingTime} min</span>
+                    <span>📊 ${recipe.difficulty}</span>
+                    <span>🌍 ${recipe.cuisine}</span>
+                </div>
+
+                <div class="modal-section">
+                    <h3>🛒 Ingredients</h3>
+                    <ul>
+                        ${recipe.ingredients.map(ing => `<li>${ing}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="modal-section">
+                    <h3>👨‍🍳 Instructions</h3>
+                    <ol class="instructions-list">
+                        ${recipe.instructions.map(step => `<li>${step}</li>`).join('')}
+                    </ol>
+                </div>
+            `;
+
+            document.getElementById('recipeModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('recipeModal').style.display = 'none';
+        }
+
+        function toggleFavorite(event, recipeId) {
+            // Prevent click from bubbling to the card
+            if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
+
+            if (favorites.includes(recipeId)) {
+                favorites = favorites.filter(id => id !== recipeId);
+            } else {
+                favorites.push(recipeId);
+            }
+
+            // Re-render using the currentResults array so we preserve API/local source
+            if (currentResults && currentResults.length > 0) {
+                displayResults(currentResults);
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('recipeModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Initialize
+        loadState();
+        updateIngredientDisplay();
+        // reflect saved favorites in rendering when results exist
+        document.getElementById('useAPI').checked = useAPI;
+        document.getElementById('apiStatus').textContent = useAPI ? 'API mode enabled - searching online recipes!' : 'Using local recipes database.';
+        // If there are saved selectedIngredients, show them
+        if (selectedIngredients && selectedIngredients.length) updateIngredientDisplay();
+        // If there are saved favorites, re-render currentResults (if any) so hearts show correctly
+        if (favorites && favorites.length && currentResults && currentResults.length) displayResults(currentResults);
+        // Save state to ensure consistency
+        saveState();
+    </script>
+</body>
+</html>
