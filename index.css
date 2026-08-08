@@ -8,7 +8,7 @@
   justify-content: center;
   padding: 5em 0 5em 0;
   text-align: center;
-  position: relative;
+  position: center;
   z-index: 2;
 }
 .projects h2 {
@@ -32,6 +32,8 @@
 .project-card {
   flex: 1 1 300px;
   max-width: 350px;
+  min-width: 300px;
+  min-height: 320px;
   background: rgba(10, 10, 10, 0.6);
   backdrop-filter: blur(25px);
   border-radius: 15px;
@@ -40,11 +42,11 @@
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   border: 2px solid rgba(255, 255, 255, 0.05);
   position: relative;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+  box-sizing: border-box;
 }
 
 .project-card::before {
@@ -766,7 +768,7 @@ button:hover {
 .Skills {
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(20px);
-  position: relative;
+  position: center;
   z-index: 2;
 }
 .UnderSkills {
@@ -801,7 +803,7 @@ button:hover {
   text-align: center;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   border: 2px solid rgba(255, 255, 255, 0.05);
-  position: relative;
+  position: center;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
 }
@@ -894,7 +896,7 @@ button:hover {
 .contact-form {
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(20px);
-  position: relative;
+  position: center;
   z-index: 2;
 }
 form h1 {
